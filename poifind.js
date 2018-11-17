@@ -1,93 +1,95 @@
+var fs = require('fs');
 
-var mapdata=[];
-var poitypes={};
+var mapdata = [];
+var poiTypes = [];
 
-var matchName= function(name,poitype) {
-    // Quote metacharacters
-    name=name.replace(/[-\/\\^$+?.()|[\]{}]/g, '\\$&');
-    name=name.replace('*','.*');
-    
-    var re=new RegExp(name, 'i');
-    return function(el) {
-        if(poitype && poitype!=el[1])  return false;
-        if(!name) return false;
-        return re.test(el[0])
+function matchName(name, poiType) {
+  // Quote metacharacters
+  name = name.replace(/[-\/\\^$+?.()|[\]{}]/g, '\\$&');
+  name = name.replace('*','.*');
+
+  var re = new RegExp(name, 'i');
+  return function(el) {
+    if (poiType && poiType!=el[1]) {
+      return false;
     }
-}
-
-var getByNumber=function(idx) {
-    return mapdata.filter(num => num[4]==idx);
-}
-
-var load = function(file) {
-    var fs = require('fs');
-    mapdata = JSON.parse(fs.readFileSync(file, 'utf8'));
-
-    // Find all numbers which are part of names of pois
-    var n, avoid={}, ptypes={};
-    mapdata.forEach(el =>  {
-	if (n=el[0].match(/\d+/g)) {
-	    n.forEach(num => {
-		avoid[num]=true;
-	    })
-	}
-    });
-    // Add a unique number to all pois, excluding numbers which 
-    // are part of poi-names
-    var j, i=100;
-    for(j=0;j<mapdata.length;j++) {
-	i++;
-	while(avoid[i] != undefined) i++;
-	mapdata[j][4]=i;
-	ptypes[mapdata[j][1]]=true;
+    if (!name){
+      return false;
     }
-    poitypes=Object.keys(ptypes);
+    return re.test(el[0])
+  }
 }
 
+function getByNumber(id) {
+  return mapdata.filter(num => num[4]==id);
+}
 
+function loadPois(file) {
+  mapdata = JSON.parse(fs.readFileSync(file, 'utf8'));
 
-var find = function(name, poitype) {
-    return mapdata.filter(matchName(name, poitype));
+  var j;
+  for(j = 0; j < mapdata.length; j++) {
+    if (!poiTypes.includes(mapdata[j][1])){
+      poiTypes.push(mapdata[j][1]);
+    }
+  }
+}
+
+function updatePoi(num, type) {
+  for (var i = 0; i < mapdata.length; i++) {
+    if (mapdata[i][4] == num) {
+      mapdata[i][1] = type
+    }
+  }
+
+  fs.writeFile('poi_with_num.json', JSON.stringify(mapdata, null, 2), function(err, data){
+    if (err) console.log(err);
+  });
+}
+
+function find(name, poiType) {
+  return mapdata.filter(matchName(name, poiType));
 }
 
 // Return single match if any
-var singleMatch = function(mapres,name,poitype,returnExact = false) {
+function singleMatch(mapres, name, poiType, returnExact = false) {
 
-    // Single match
-    if(mapres.length == 1)
-	return mapres[0];
+  // Single match
+  if(mapres.length == 1) {
+    return mapres[0];
+  }
 
-    // If exact match, return only this match
-    if(returnExact) {
-	var exactMatches=[]
-	mapres.forEach(el =>  {
-	    if(name.toLowerCase()==el[0].trim().toLowerCase()) {
-		exactMatches.push(el);
-	    }
-	});
-	if(exactMatches.length == 1) 
-	    return exactMatches[0];
-    }
-}
-
-var listResults = function(mapres) {
-    var res = [];
+  // If exact match, return only this match
+  if(returnExact) {
+    var exactMatches=[]
     mapres.forEach(el => {
-	res.push("" + el[1]+": "+el[0] + " _"+el[4]+"_")
+      if(name.toLowerCase()==el[0].trim().toLowerCase()) {
+        exactMatches.push(el);
+      }
     });
-    return res;
+    if(exactMatches.length == 1) {
+      return exactMatches[0];
+    }
+  }
 }
 
+function listResults(mapres) {
+  var res = [];
+  mapres.forEach(el => {
+    res.push("" + el[1]+": "+el[0] + " _"+el[4]+"_")
+  });
+  return res;
+}
 
-var isPoiType = function(str) {
-    return poitypes.includes(str);
+function isPoiType(str) {
+  return poiTypes.includes(str);
 }
 
 module.exports = {
-    load: load,
-    listResults: listResults,
-    singleMatch:singleMatch,
-    getByNumber:getByNumber,
-    isPoiType:isPoiType,
-    find: find
+  loadPois: loadPois,
+  listResults: listResults,
+  singleMatch:singleMatch,
+  getByNumber:getByNumber,
+  isPoiType:isPoiType,
+  find: find
 }
