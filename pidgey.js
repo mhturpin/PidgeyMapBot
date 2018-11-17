@@ -40,7 +40,7 @@ client.on("message", async message => {
   const command = args.shift().toLowerCase();
   const isDirectMessage = ( message.guild === null );
 
-  if (command === config.map_command || command === config.update_poi_command) {
+  if (command === config.map_command) {
 
     let poiType = "";
     let clientMessage;
@@ -73,17 +73,8 @@ client.on("message", async message => {
 
     if (showHelp) {
       const embed = new Discord.RichEmbed();
-      let map_usage = config.prefix + config.map_command + ' ' + strings[config.language]["searchstring"];
-      let update_usage = config.prefix + config.update_poi_command + ' ' + strings[config.language]["searchstring"];
-      let usage;
+      let usage = config.prefix + config.map_command + ' ' + strings[config.language]["searchstring"];
 
-      if (command === config.map_command) {
-        usage = map_usage;
-      } else if (command === config.update_poi_command) {
-        usage = update_usage;
-      } else {
-        usage = map_usage + '\n' + update_usage;
-      }
       embed.setTitle('Usage:').setDescription(usage);
       clientMessage = {embed};
 
@@ -91,19 +82,13 @@ client.on("message", async message => {
       clientMessage = strings[config.language]["nomatches"].replace('{term}',query);
 
     } else if (singleMatch = poifinder.singleMatch(matches, query, poiType)) {
-      if (command === config.map_command) {
-        let coord = singleMatch[2] + "%2C" + singleMatch[3];
-        const embed = new Discord.RichEmbed();
+      let coord = singleMatch[2] + "%2C" + singleMatch[3];
+      const embed = new Discord.RichEmbed();
 
-        embed.setTitle(singleMatch[0]+" (" + singleMatch[1] + ")")
-             .setDescription("[Link to Google Maps](https://www.google.com/maps/search/?api=1&query="+ coord + ")");
+      embed.setTitle(singleMatch[0])
+           .setDescription("[Link to Google Maps](https://www.google.com/maps/search/?api=1&query="+ coord + ")");
 
-        clientMessage = {embed};
-      } else if (command === config.update_poi_command) {
-        clientMessage = strings[config.language]["update_confirmation"]
-                          .replace('{name}', singleMatch[0])
-                          .replace('{type1}', singleMatch[1]);
-      }
+      clientMessage = {embed};
 
     } else if (matches.length <= maxHits) {
       clientMessage = strings[config.language]["selectmap"];

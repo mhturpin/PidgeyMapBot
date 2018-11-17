@@ -2,11 +2,8 @@
   "token": "",
   "prefix": "!",
   "map_command": "map",
-  "update_poi_command": "updatestop",
-  "google_api_key": "",
   "name": "pidgey",
   "logdir":"logs",
   "poifile":"data/poi.json",
   "language":"en"
 }
-
