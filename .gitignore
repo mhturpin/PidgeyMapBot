@@ -1,3 +1,7 @@
 config.json
 /logs
 /node_modules
+data/poi.json
+export.csv
+package-lock.json
+poi_with_num.json
